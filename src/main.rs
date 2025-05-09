@@ -2,10 +2,11 @@ use itertools::Itertools;
 use mail_parser::MessageParser;
 use std::collections::HashMap;
 use std::fmt::Write as FmtWrite;
-use std::io::{stdin, stdout, Write};
+use std::io::{stderr, stdin, stdout, Write};
 
 fn main() -> std::io::Result<()> {
     let mut std_out = stdout().lock();
+    let mut std_err = stderr().lock();
     let mut sessions = HashMap::<String, String>::new();
 
     for l in stdin().lines() {
@@ -84,16 +85,29 @@ fn main() -> std::io::Result<()> {
                                             None => true,
                                             Some(mail) =>
                                                 match MessageParser::new().parse_headers(mail) {
-                                                    None => true,
+                                                    None => {
+                                                        writeln!(std_err, "Malformed eMail:")?;
+                                                        write!(std_err, "{}", mail)?;
+                                                        writeln!(std_err, ".")?;
+                                                        true
+                                                    }
                                                     Some(mail) =>
                                                         match mail.header("X-Google-Group-Id") {
                                                             None => true,
-                                                            Some(_) => false,
+                                                            Some(_) => {
+                                                                writeln!(
+                                                                    std_err,
+                                                                    "Google Group detected"
+                                                                )?;
+                                                                false
+                                                            }
                                                         },
                                                 },
                                         } {
+                                            writeln!(std_err, "Allowing")?;
                                             "proceed"
                                         } else {
+                                            writeln!(std_err, "Denying")?;
                                             "reject|550 Forbidden"
                                         }
                                     )?;
