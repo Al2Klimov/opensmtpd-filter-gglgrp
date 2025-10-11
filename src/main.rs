@@ -129,7 +129,7 @@ fn main() -> std::io::Result<()> {
                                             "proceed"
                                         } else {
                                             writeln!(std_err, "Denying")?;
-                                            "reject|550 Forbidden"
+                                            "reject|550 Google Groups not allowed"
                                         }
                                     )?;
                                 }
